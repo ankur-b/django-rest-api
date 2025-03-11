@@ -4,15 +4,18 @@ from django.http import JsonResponse
 from watchlist_app.models import WatchList,StreamPlatform,Review
 from watchlist_app.serializers import WatchListSerializer,StreamPlatformSerializer,ReviewSerializer
 from watchlist_app.permissions import AdminOrReadOnly,ReviewUserOrReadOnly
+from watchlist_app.throttling import ReviewCreateThrottle,ReviewListThrottle
 
+from rest_framework.throttling import UserRateThrottle,AnonRateThrottle
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,throttle_classes
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 @api_view(['GET','PUT','DELETE'])
+@throttle_classes([ReviewCreateThrottle])
 @permission_classes([ReviewUserOrReadOnly])
 def ReviewDetailFN(request,id):
     if request.method=='GET':
@@ -38,6 +41,7 @@ def ReviewDetailFN(request,id):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET','POST'])
+@throttle_classes([ReviewListThrottle,AnonRateThrottle])
 @permission_classes([IsAuthenticated])
 def ReviewListFN(request,id):
     if request.method=='GET':
