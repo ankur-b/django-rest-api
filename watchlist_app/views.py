@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from watchlist_app.models import WatchList,StreamPlatform,Review
 from watchlist_app.serializers import WatchListSerializer,StreamPlatformSerializer,ReviewSerializer
 from watchlist_app.permissions import AdminOrReadOnly,ReviewUserOrReadOnly
-from watchlist_app.throttling import ReviewCreateThrottle,ReviewListThrottle
+from watchlist_app.throttling import ReviewCreateThrottle,ReviewListThrottle,ScopedRateThrottle
 
 from rest_framework.throttling import UserRateThrottle,AnonRateThrottle
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,IsAuthenticated
@@ -15,9 +15,10 @@ from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 @api_view(['GET','PUT','DELETE'])
-@throttle_classes([ReviewCreateThrottle])
+@throttle_classes([ReviewCreateThrottle,ScopedRateThrottle])
 @permission_classes([ReviewUserOrReadOnly])
 def ReviewDetailFN(request,id):
+    throttle_scope = 'review-detail'
     if request.method=='GET':
         try:
             review = Review.objects.get(id=id)
